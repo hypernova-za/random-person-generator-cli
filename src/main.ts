@@ -35,18 +35,15 @@ class SouthAfricanIdNumber {
     }
 
     private CalculateLuhnChecksum(id: string): number {
-        let sum = 0;
-        let alternate = false;
-        for (let i = id.length - 1; i >= 0; i--) {
-            let n = parseInt(id.charAt(i), 10);
-            if (alternate) {
-                n *= 2;
-                if (n > 9) n -= 9;
+        const digits = id.split('').reverse().map(Number);
+        const checksum = digits.reduce((sum, digit, index) => {
+            if (index % 2 === 0) {
+                const doubled = digit * 2;
+                return sum + (doubled > 9 ? doubled - 9 : doubled);
             }
-            sum += n;
-            alternate = !alternate;
-        }
-        return (10 - (sum % 10)) % 10;
+            return sum + digit;
+        }, 0);
+        return (10 - (checksum % 10)) % 10;
     }
 
     public GenerateIdNumber(): string {
@@ -66,6 +63,15 @@ class RandomPerson {
     public southAfricanIdNumber?: string;
     public sex: Sex = Sex.Male;
     public citizenship: Citizenship = Citizenship.SouthAfrican;
+    public age(): number {
+        if (!this.dateOfBirth) return 0;
+
+        const today = new Date();
+        const birthDateThisYear = new Date(today.getFullYear(), this.dateOfBirth.getMonth(), this.dateOfBirth.getDate());
+        const age = today.getFullYear() - this.dateOfBirth.getFullYear();
+
+        return today < birthDateThisYear ? age - 1 : age;
+    }
 }
 
 class PropertyLogger {
@@ -94,4 +100,6 @@ PropertyLogger.logPropery('Date of Birth', padToLength, person.dateOfBirth ? per
 PropertyLogger.logPropery('Sex', padToLength, person.sex === Sex.Male ? 'Male' : 'Female');
 PropertyLogger.logPropery('Citizenship', padToLength, person.citizenship === Citizenship.SouthAfrican ? 'South African' : 'Permanent Resident');
 PropertyLogger.logPropery('South African ID Number', padToLength, person.southAfricanIdNumber);
+PropertyLogger.logPropery('Age', padToLength, person.age().toString());
+
 console.log();
